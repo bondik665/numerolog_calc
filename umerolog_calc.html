@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нумерологический Калькулятор</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+    .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        margin: 0 auto;
+    }
+    h1 {
+        color: #5c6bc0;
+        margin-bottom: 20px;
+        font-size: 2.5em;
+        font-weight: 600;
+    }
+    label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #5c6bc0;
+        font-size: 1.2em;
+    }
+    input[type="text"], input[type="date"] {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        transition: border-color 0.3s ease;
+    }
+    input[type="text"]:focus, input[type="date"]:focus {
+        border-color: #5c6bc0;
+        outline: none;
+    }
+    button {
+        width: 100%;
+        padding: 15px;
+        background-color: #5c6bc0;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.2em;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #3f51b5;
+    }
+    .results {
+        margin-top: 30px;
+        padding: 20px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        text-align: left;
+        font-size: 1.1em;
+        line-height: 1.6;
+        width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .results p {
+        margin: 10px 0;
+    }
+    .results strong {
+        color: #5c6bc0;
+    }
+</style>
+<body>
+    <div class="container">
+        <h1>Нумерологический Калькулятор</h1>
+        <form id="numerologyForm">
+            <label for="name">Имя:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="birthDate">Дата рождения (дата-месяц-год):</label>
+            <input type="date" id="birthDate" name="birthDate" required>
+            <button type="submit">Рассчитать</button>
+        </form>
+        <div class="results" id="results"></div>
+        <canvas id="numerologyChart" width="400" height="200"></canvas>
+    </div>
+
+    <script>
+        document.getElementById('numerologyForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем перезагрузку страницы
+
+            const name = document.getElementById('name').value;
+            const birthDate = document.getElementById('birthDate').value;
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
+            const currentDay = new Date().getDate();
+
+            const lifePathNumber = calculateLifePathNumber(birthDate);
+            const expressionNumber = calculateExpressionNumber(name);
+            const soulUrgeNumber = calculateSoulUrgeNumber(name);
+            const personalityNumber = calculatePersonalityNumber(name);
+            const birthdayNumber = calculateBirthdayNumber(birthDate);
+            const karmicDebtNumber = calculateKarmicDebtNumber(lifePathNumber);
+            const maturityNumber = calculateMaturityNumber(lifePathNumber, expressionNumber);
+            const challengeNumbers = calculateChallengeNumbers(birthDate);
+            const personalYearNumber = calculatePersonalYearNumber(birthDate, currentYear);
+            const personalMonthNumber = calculatePersonalMonthNumber(personalYearNumber, currentMonth);
+            const personalDayNumber = calculatePersonalDayNumber(personalMonthNumber, currentDay);
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <p><strong>Число Судьбы :</strong> ${lifePathNumber} - ${descriptions.lifePathNumber[lifePathNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.lifePathNumber[lifePathNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.lifePathNumber[lifePathNumber].weaknesses} - ${descriptions.lifePathNumber[lifePathNumber].learning}</p>
+
+                <p><strong>Число Имени :</strong> ${expressionNumber} - ${descriptions.expressionNumber[expressionNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.expressionNumber[expressionNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.expressionNumber[expressionNumber].weaknesses} - ${descriptions.expressionNumber[expressionNumber].learning}</p>
+
+                <p><strong>Число Души :</strong> ${soulUrgeNumber} - ${descriptions.soulUrgeNumber[soulUrgeNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.soulUrgeNumber[soulUrgeNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.soulUrgeNumber[soulUrgeNumber].weaknesses} - ${descriptions.soulUrgeNumber[soulUrgeNumber].learning}</p>
+
+                <p><strong>Число Личности :</strong> ${personalityNumber} - ${descriptions.personalityNumber[personalityNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.personalityNumber[personalityNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.personalityNumber[personalityNumber].weaknesses} - ${descriptions.personalityNumber[personalityNumber].learning}</p>
+
+                <p><strong>Число Дня Рождения :</strong> ${birthdayNumber} - ${descriptions.birthdayNumber[birthdayNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.birthdayNumber[birthdayNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.birthdayNumber[birthdayNumber].weaknesses} - ${descriptions.birthdayNumber[birthdayNumber].learning}</p>
+
+                <p><strong>Число Перерождения :</strong> ${karmicDebtNumber ? karmicDebtNumber : 'Нет'} - ${karmicDebtNumber ? descriptions.karmicDebtNumber[karmicDebtNumber].description : 'Нет кармических долгов'}</p>
+                <p><strong>Характер, возможности:</strong> ${karmicDebtNumber ? descriptions.karmicDebtNumber[karmicDebtNumber].strengths : 'Нет'}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${karmicDebtNumber ? descriptions.karmicDebtNumber[karmicDebtNumber].weaknesses : 'Нет'} - ${karmicDebtNumber ? descriptions.karmicDebtNumber[karmicDebtNumber].learning : 'Нет'}</p>
+
+                <p><strong>Число Зрелости :</strong> ${maturityNumber} - ${descriptions.maturityNumber[maturityNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.maturityNumber[maturityNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.maturityNumber[maturityNumber].weaknesses} - ${descriptions.maturityNumber[maturityNumber].learning}</p>
+
+                <p><strong>Число Перемен :</strong> ${challengeNumbers.join(', ')} - ${challengeNumbers.map(num => descriptions.challengeNumbers[num] ? descriptions.challengeNumbers[num].description : 'Описание отсутствует').join(', ')}</p>
+                <p><strong>Характер, возможности:</strong> ${challengeNumbers.map(num => descriptions.challengeNumbers[num] ? descriptions.challengeNumbers[num].strengths : 'Нет').join(', ')}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${challengeNumbers.map(num => descriptions.challengeNumbers[num] ? descriptions.challengeNumbers[num].weaknesses : 'Нет').join(', ')} - ${challengeNumbers.map(num => descriptions.challengeNumbers[num] ? descriptions.challengeNumbers[num].learning : 'Нет').join(', ')}</p>
+
+                <p><strong>Число Личного Года :</strong> ${personalYearNumber} - ${descriptions.personalYearNumber[personalYearNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.personalYearNumber[personalYearNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.personalYearNumber[personalYearNumber].weaknesses} - ${descriptions.personalYearNumber[personalYearNumber].learning}</p>
+
+                <p><strong>Число Личного Месяца :</strong> ${personalMonthNumber} - ${descriptions.personalMonthNumber[personalMonthNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.personalMonthNumber[personalMonthNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.personalMonthNumber[personalMonthNumber].weaknesses} - ${descriptions.personalMonthNumber[personalMonthNumber].learning}</p>
+
+                <p><strong>Число Личного Дня :</strong> ${personalDayNumber} - ${descriptions.personalDayNumber[personalDayNumber].description}</p>
+                <p><strong>Характер, возможности:</strong> ${descriptions.personalDayNumber[personalDayNumber].strengths}</p>
+                <p><strong>Слабости, чему нужно учиться:</strong> ${descriptions.personalDayNumber[personalDayNumber].weaknesses} - ${descriptions.personalDayNumber[personalDayNumber].learning}</p>
+            `;
+
+            // Создание графика
+            createNumerologyChart(lifePathNumber, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber, karmicDebtNumber, maturityNumber, challengeNumbers, personalYearNumber, personalMonthNumber, personalDayNumber);
+        });
+
+        // Функция для упрощения числа до однозначного
+        function reduceNumber(num) {
+            while (num > 9) {
+                num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+            }
+            return num;
+        }
+
+        // Функция для расчета Числа Судьбы (Life Path Number)
+        function calculateLifePathNumber(birthDate) {
+            const [year, month, day] = birthDate.split('-').map(Number);
+            const lifePathNumber = reduceNumber(year) + reduceNumber(month) + reduceNumber(day);
+            return reduceNumber(lifePathNumber);
+        }
+
+        // Функция для расчета Числа Имени (Expression Number)
+        function calculateExpressionNumber(name) {
+            const letters = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+            const values = {
+                'А': 1, 'Б': 2, 'В': 3, 'Г': 4, 'Д': 5, 'Е': 6, 'Ё': 7, 'Ж': 8, 'З': 9,
+                'И': 1, 'Й': 2, 'К': 3, 'Л': 4, 'М': 5, 'Н': 6, 'О': 7, 'П': 8, 'Р': 9,
+                'С': 1, 'Т': 2, 'У': 3, 'Ф': 4, 'Х': 5, 'Ц': 6, 'Ч': 7, 'Ш': 8, 'Щ': 9,
+                'Ъ': 1, 'Ы': 2, 'Ь': 3, 'Э': 4, 'Ю': 5, 'Я': 6
+            };
+
+            const nameUpper = name.toUpperCase();
+            let expressionNumber = 0;
+            for (let char of nameUpper) {
+                if (values[char]) {
+                    expressionNumber += values[char];
+                }
+            }
+            return reduceNumber(expressionNumber);
+        }
+
+        // Функция для расчета Числа Души (Soul Urge Number)
+        function calculateSoulUrgeNumber(name) {
+            const vowels = 'АЕЁИОУЫЭЮЯ';
+            const nameUpper = name.toUpperCase();
+            let soulUrgeNumber = 0;
+            for (let char of nameUpper) {
+                if (vowels.includes(char)) {
+                    soulUrgeNumber += calculateExpressionNumber(char);
+                }
+            }
+            return reduceNumber(soulUrgeNumber);
+        }
+
+        // Функция для расчета Числа Личности (Personality Number)
+        function calculatePersonalityNumber(name) {
+            const consonants = 'БВГДЖЗЙКЛМНПРСТФХЦЧШЩЪЬ';
+            const nameUpper = name.toUpperCase();
+            let personalityNumber = 0;
+            for (let char of nameUpper) {
+                if (consonants.includes(char)) {
+                    personalityNumber += calculateExpressionNumber(char);
+                }
+            }
+            return reduceNumber(personalityNumber);
+        }
+
+        // Функция для расчета Числа Дня Рождения (Birthday Number)
+        function calculateBirthdayNumber(birthDate) {
+            const [_, __, day] = birthDate.split('-').map(Number);
+            return reduceNumber(day);
+        }
+
+        // Функция для расчета Числа Перерождения (Karmic Debt Number)
+        function calculateKarmicDebtNumber(lifePathNumber) {
+            const karmicDebtNumbers = [13, 14, 16, 19];
+            return karmicDebtNumbers.includes(lifePathNumber) ? lifePathNumber : null;
+        }
+
+        // Функция для расчета Числа Зрелости (Maturity Number)
+        function calculateMaturityNumber(lifePathNumber, expressionNumber) {
+            return reduceNumber(lifePathNumber + expressionNumber);
+        }
+
+        // Функция для расчета Числа Перемен (Challenge Numbers)
+        function calculateChallengeNumbers(birthDate) {
+            const [year, month, day] = birthDate.split('-').map(Number);
+            const monthReduced = reduceNumber(month);
+            const dayReduced = reduceNumber(day);
+            const yearReduced = reduceNumber(year);
+
+            const challenge1 = Math.abs(monthReduced - dayReduced);
+            const challenge2 = Math.abs(monthReduced - yearReduced);
+            const challenge3 = Math.abs(challenge1 - challenge2);
+            const challenge4 = Math.abs(dayReduced - yearReduced);
+
+return [challenge1, challenge2, challenge3, challenge4];
+}
+
+// Функция для расчета Числа Личного Года (Personal Year Number)
+function calculatePersonalYearNumber(birthDate, currentYear) {
+const [_, month, day] = birthDate.split('-').map(Number);
+const personalYearNumber = reduceNumber(month) + reduceNumber(day) + reduceNumber(currentYear);
+return reduceNumber(personalYearNumber);
+}
+
+// Функция для расчета Числа Личного Месяца (Personal Month Number)
+function calculatePersonalMonthNumber(personalYearNumber, currentMonth) {
+return reduceNumber(personalYearNumber + currentMonth);
+}
+
+// Функция для расчета Числа Личного Дня (Personal Day Number)
+function calculatePersonalDayNumber(personalMonthNumber, currentDay) {
+return reduceNumber(personalMonthNumber + currentDay);
+}
+
+// Функция для создания графика
+function createNumerologyChart(lifePathNumber, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber, karmicDebtNumber, maturityNumber, challengeNumbers, personalYearNumber, personalMonthNumber, personalDayNumber) {
+const ctx = document.getElementById('numerologyChart').getContext('2d');
+
+// Проверка длины массивов
+const labels = ['Число Судьбы', 'Число Имени', 'Число Души', 'Число Личности', 'Число Дня Рождения', 'Число Перерождения', 'Число Зрелости', 'Число Перемен 1', 'Число Перемен 2', 'Число Перемен 3', 'Число Перемен 4', 'Число Личного Года', 'Число Личного Месяца', 'Число Личного Дня'];
+const data = [lifePathNumber, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber, karmicDebtNumber || 0, maturityNumber, ...challengeNumbers, personalYearNumber, personalMonthNumber, personalDayNumber];
+const backgroundColor = [
+    'rgba(255, 99, 132, 0.2)',
+    'rgba(54, 162, 235, 0.2)',
+    'rgba(255, 206, 86, 0.2)',
+    'rgba(75, 192, 192, 0.2)',
+    'rgba(153, 102, 255, 0.2)',
+    'rgba(255, 159, 64, 0.2)',
+    'rgba(199, 199, 199, 0.2)',
+    'rgba(83, 102, 255, 0.2)',
+    'rgba(40, 159, 64, 0.2)',
+    'rgba(210, 199, 199, 0.2)',
+    'rgba(78, 52, 199, 0.2)',
+    'rgba(128, 0, 128, 0.2)',
+    'rgba(0, 128, 0, 0.2)',
+    'rgba(255, 0, 0, 0.2)'
+];
+const borderColor = [
+    'rgba(255, 99, 132, 1)',
+    'rgba(54, 162, 235, 1)',
+    'rgba(255, 206, 86, 1)',
+    'rgba(75, 192, 192, 1)',
+    'rgba(153, 102, 255, 1)',
+    'rgba(255, 159, 64, 1)',
+    'rgba(199, 199, 199, 1)',
+    'rgba(83, 102, 255, 1)',
+    'rgba(40, 159, 64, 1)',
+    'rgba(210, 199, 199, 1)',
+    'rgba(78, 52, 199, 1)',
+    'rgba(128, 0, 128, 1)',
+    'rgba(0, 128, 0, 1)',
+    'rgba(255, 0, 0, 1)'
+];
+
+// Проверка длины массивов
+if (labels.length !== data.length || labels.length !== backgroundColor.length || labels.length !== borderColor.length) {
+    console.error('Длины массивов не совпадают');
+    return;
+}
+
+const numerologyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Числа',
+            data: data,
+            backgroundColor: backgroundColor,
+            borderColor: borderColor,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 9
+            }
+        }
+    }
+});
+}
+
+// Объект с описаниями для каждого числа
+const descriptions = {
+lifePathNumber: {
+    1: {
+        description: "Число Судьбы 1 символизирует лидерство, независимость и творческий потенциал.",
+        strengths: "Лидерские качества, независимость, творческий потенциал.",
+        weaknesses: "Эгоизм, упрямство, нетерпимость.",
+        learning: "Учиться сотрудничеству и принимать помощь от других.",
+    },
+    2: {
+        description: "Число Судьбы 2 символизирует гармонию, сотрудничество и дипломатические навыки.",
+        strengths: "Гармония, сотрудничество, дипломатические навыки.",
+        weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+        learning: "Учиться принимать решения и быть более уверенным в себе.",
+    },
+    3: {
+        description: "Число Судьбы 3 символизирует творческий потенциал, оптимизм и коммуникабельность.",
+        strengths: "Творческий потенциал, оптимизм, коммуникабельность.",
+        weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+        learning: "Учиться концентрации и глубокому анализу.",
+    },
+    4: {
+        description: "Число Судьбы 4 символизирует стабильность, практичность и трудолюбие.",
+        strengths: "Стабильность, практичность, трудолюбие.",
+        weaknesses: "Упрямство, ригидность, недоверчивость.",
+        learning: "Учиться гибкости и принимать изменения.",
+    },
+    5: {
+        description: "Число Судьбы 5 символизирует свободу, приключения и адаптивность.",
+        strengths: "Свобода, приключения, адаптивность.",
+        weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+        learning: "Учиться планированию и ответственности.",
+    },
+    6: {
+        description: "Число Судьбы 6 символизирует заботу, гармонию и семейные ценности.",
+        strengths: "Забота, гармония, семейные ценности.",
+        weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+        learning: "Учиться балансу между заботой о других и заботой о себе.",
+    },
+    7: {
+        description: "Число Судьбы 7 символизирует глубокие мысли, интуицию и духовность.",
+        strengths: "Глубокие мысли, интуиция, духовность.",
+        weaknesses: "Замкнутость, скептицизм, отстраненность.",
+        learning: "Учиться открытости и общению с другими.",
+    },
+    8: {
+        description: "Число Судьбы 8 символизирует успех, материальное благополучие и организаторские способности.",
+        strengths: "Успех, материальное благополучие, организаторские способности.",
+        weaknesses: "Алчность, манипулятивность, эгоизм.",
+        learning: "Учиться щедрости и альтруизму.",
+    },
+    9: {
+        description: "Число Судьбы 9 символизирует сострадание, гуманизм и духовную зрелость.",
+        strengths: "Сострадание, гуманизм, духовную зрелость.",
+        weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+        learning: "Учиться балансу между заботой о других и заботой о себе.",
+    },
+},
+expressionNumber: {
+    1: {
+        description: "Число Имени 1 символизирует лидерство, независимость и творческий потенциал.",
+        strengths: "Лидерские качества, независимость, творческий потенциал.",
+        weaknesses: "Эгоизм, упрямство, нетерпимость.",
+        learning: "Учиться сотрудничеству и принимать помощь от других.",
+    },
+    2: {
+        description: "Число Имени 2 символизирует гармонию, сотрудничество и дипломатические навыки.",
+        strengths: "Гармония, сотрудничество, дипломатические навыки.",
+        weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+        learning: "Учиться принимать решения и быть более уверенным в себе.",
+    },
+    3: {
+        description: "Число Имени 3 символизирует творческий потенциал, оптимизм и коммуникабельность.",
+        strengths: "Творческий потенциал, оптимизм, коммуникабельность.",
+        weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+        learning: "Учиться концентрации и глубокому анализу.",
+    },
+    4: {
+        description: "Число Имени 4 символизирует стабильность, практичность и трудолюбие.",
+        strengths: "Стабильность, практичность, трудолюбие.",
+        weaknesses: "Упрямство, ригидность, недоверчивость.",
+        learning: "Учиться гибкости и принимать изменения.",
+    },
+    5: {
+        description: "Число Имени 5 символизирует свободу, приключения и адаптивность.",
+        strengths: "Свобода, приключения, адаптивность.",
+        weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+        learning: "Учиться планированию и ответственности.",
+    },
+    6: {
+        description: "Число Имени 6 символизирует заботу, гармонию и семейные ценности.",
+        strengths: "Забота, гармония, семейные ценности.",
+        weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+        learning: "Учиться балансу между заботой о других и заботой о себе.",
+    },
+    7: {
+        description: "Число Имени 7 символизирует глубокие мысли, интуицию и духовность.",
+        strengths: "Глубокие мысли, интуиция, духовность.",
+        weaknesses: "Замкнутость, скептицизм, отстраненность.",
+        learning: "Учиться открытости и общению с другими.",
+    },
+    8: {
+        description: "Число Имени 8 символизирует успех, материальное благополучие и организаторские способности.",
+        strengths: "Успех, материальное благополучие, организаторские способности.",
+        weaknesses: "Алчность, манипулятивность, эгоизм.",
+        learning: "Учиться щедрости и альтруизму.",
+    },
+    9: {
+        description: "Число Имени 9 символизирует сострадание, гуманизм и духовную зрелость.",
+        strengths: "Сострадание, гуманизм, духовную зрелость.",
+        weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+        learning: "Учиться балансу между заботой о других и заботой о себе.",
+    },
+},
+soulUrgeNumber: {
+    1: {
+        description: "Число Души 1 символизирует стремление к независимости и лидерству.",
+        strengths: "Стремление к независимости и лидерству.",
+        weaknesses: "Эгоизм, упрямство, нетерпимость.",
+        learning: "Учиться сотрудничеству и принимать помощь от других.",
+    },
+    2: {
+        description: "Число Души 2 символизирует стремление к гармонии и сотрудничеству.",
+        strengths: "Стремление к гармонии и сотрудничеству.",
+        weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+        learning: "Учиться принимать решения и быть более уверенным в себе.",
+    },
+    3: {
+        description: "Число Души 3 символизирует стремление к творчеству и самовыражению.",
+        strengths: "Стремление к творчеству и самовыражению.",
+        weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+        learning: "Учиться концентрации и глубокому анализу.",
+    },
+    4: {
+        description: "Число Души 4 символизирует стремление к стабильности и практичности.",
+        strengths: "Стремление к стабильности и практичности.",
+        weaknesses: "Упрямство, ригидность, недоверчивость.",
+        learning: "Учиться гибкости и принимать изменения.",
+    },
+    5: {
+        description: "Число Души 5 символизирует стремление к свободе и приключениям.",
+        strengths: "Стремление к свободе и приключениям.",
+        weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+        learning: "Учиться планированию и ответственности.",
+    },
+    6: {
+        description: "Число Души 6 символизирует стремление к заботе и гармонии в семье.",
+        strengths: "Стремление к заботе и гармонии в семье.",
+        weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+        learning: "Учиться балансу между заботой о других и заботой о себе.",
+    },
+    7: {
+        description: "Число Души 7 символизирует стремление к глубоким мыслям и духовности.",
+        strengths: "Стремление к глубоким                    мыслям и духовности.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Души 8 символизирует стремление к успеху и материальному благополучию.",
+                    strengths: "Стремление к успеху и материальному благополучию.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Души 9 символизирует стремление к состраданию и гуманизму.",
+                    strengths: "Стремление к состраданию и гуманизму.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            personalityNumber: {
+                1: {
+                    description: "Число Личности 1 символизирует проявление лидерства и независимости.",
+                    strengths: "Проявление лидерства и независимости.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Личности 2 символизирует проявление гармонии и сотрудничества.",
+                    strengths: "Проявление гармонии и сотрудничества.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Личности 3 символизирует проявление творчества и коммуникабельности.",
+                    strengths: "Проявление творчества и коммуникабельности.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Личности 4 символизирует проявление стабильности и практичности.",
+                    strengths: "Проявление стабильности и практичности.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Личности 5 символизирует проявление свободы и адаптивность.",
+                    strengths: "Проявление свободы и адаптивность.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Личности 6 символизирует проявление заботы и гармонии в семье.",
+                    strengths: "Проявление заботы и гармонии в семье.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Личности 7 символизирует проявление глубоких мыслей и духовности.",
+                    strengths: "Проявление глубоких мыслей и духовности.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Личности 8 символизирует проявление успеха и материального благополучия.",
+                    strengths: "Проявление успеха и материального благополучия.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Личности 9 символизирует проявление сострадания и гуманизма.",
+                    strengths: "Проявление сострадания и гуманизма.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            birthdayNumber: {
+                1: {
+                    description: "Число Дня Рождения 1 символизирует лидерские качества и независимость.",
+                    strengths: "Лидерские качества, независимость.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Дня Рождения 2 символизирует гармонию и дипломатические навыки.",
+                    strengths: "Гармония, дипломатические навыки.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Дня Рождения 3 символизирует творческий потенциал и оптимизм.",
+                    strengths: "Творческий потенциал, оптимизм.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Дня Рождения 4 символизирует стабильность и практичность.",
+                    strengths: "Стабильность, практичность.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Дня Рождения 5 символизирует свободу и адаптивность.",
+                    strengths: "Свобода, адаптивность.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Дня Рождения 6 символизирует заботу и семейные ценности.",
+                    strengths: "Забота, семейные ценности.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Дня Рождения 7 символизирует глубокие мысли и интуицию.",
+                    strengths: "Глубокие мысли, интуиция.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Дня Рождения 8 символизирует успех и организаторские способности.",
+                    strengths: "Успех, организаторские способности.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Дня Рождения 9 символизирует сострадание и духовную зрелость.",
+                    strengths: "Сострадание, духовную зрелость.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            karmicDebtNumber: {
+                13: {
+                    description: "Число Перерождения 13 символизирует необходимость отработки лени и нежелания работать.",
+                    strengths: "Нет.",
+                    weaknesses: "Лень, нежелание работать.",
+                    learning: "Учиться трудолюбию и дисциплине.",
+                },
+                14: {
+                    description: "Число Перерождения 14 символизирует необходимость отработки контроля и власти.",
+                    strengths: "Нет.",
+                    weaknesses: "Контроль, власть.",
+                    learning: "Учиться делегированию и доверию.",
+                },
+                16: {
+                    description: "Число Перерождения 16 символизирует необходимость отработки эгоизма и гордыни.",
+                    strengths: "Нет.",
+                    weaknesses: "Эгоизм, гордыня.",
+                    learning: "Учиться смирению и скромности.",
+                },
+                19: {
+                    description: "Число Перерождения 19 символизирует необходимость отработки эгоцентризма и самопожертвования.",
+                    strengths: "Нет.",
+                    weaknesses: "Эгоцентризм, самопожертвование.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            maturityNumber: {
+                1: {
+                    description: "Число Зрелости 1 символизирует стремление к лидерству и независимости в зрелом возрасте.",
+                    strengths: "Лидерство, независимость.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Зрелости 2 символизирует стремление к гармонии и сотрудничеству в зрелом возрасте.",
+                    strengths: "Гармония, сотрудничество.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Зрелости 3 символизирует стремление к творчеству и самовыражению в зрелом возрасте.",
+                    strengths: "Творчество, самовыражение.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Зрелости 4 символизирует стремление к стабильности и практичности в зрелом возрасте.",
+                    strengths: "Стабильность, практичность.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Зрелости 5 символизирует стремление к свободе и приключениям в зрелом возрасте.",
+                    strengths: "Свобода, приключения.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Зрелости 6 символизирует стремление к заботе и гармонии в семье в зрелом возрасте.",
+                    strengths: "Забота, гармония в семье.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Зрелости 7 символизирует стремление к глубоким мыслям и духовности в зрелом возрасте.",
+                    strengths: "Глубокие мысли, духовность.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Зрелости 8 символизирует стремление к успеху и материальному благополучию в зрелом возрасте.",
+                    strengths: "Успех, материальное благополучие.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Зрелости 9 символизирует стремление к состраданию и гуманизму в зрелом возрасте.",
+                    strengths: "Сострадание, гуманизм.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            challengeNumbers: {
+                1: {
+                    description: "Число Перемен 1 символизирует испытания, связанные с лидерством и независимостью.",
+                    strengths: "Лидерство, независимость.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Перемен 2 символизирует испытания, связанные с гармонией и сотрудничеством.",
+                    strengths: "Гармония, сотрудничество.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Перемен 3 символизирует испытания, связанные с творчеством и коммуникабельностью.",
+                    strengths: "Творчество, коммуникабельность.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Перемен 4 символизирует испытания, связанные со стабильностью и практичностью.",
+                    strengths: "Стабильность, практичность.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Перемен 5 символизирует испытания, связанные со свободой и адаптивностью.",
+                    strengths: "Свобода, адаптивность.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Перемен 6 символизирует испытания, связанные с заботой и гармонией в семье.",
+                    strengths: "Забота, гармония в семье.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Перемен 7 символизирует испытания, связанные с глубокими мыслями и духовности.",
+                    strengths: "Глубокие мысли, духовность.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Перемен 8 символизирует испытания, связанные с успехом и материальным благополучием.",
+                    strengths: "Успех, материальное благополучие.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Перемен 9 символизирует испытания, связанные с состраданием и гуманизмом.",
+                    strengths: "Сострадание, гуманизм.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            personalYearNumber: {
+                1: {
+                    description: "Число Личного Года 1 символизирует начало нового цикла и возможности для личного роста.",
+                    strengths: "Новые начинания, инициатива, независимость.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Личного Года 2 символизирует гармонию и сотрудничество.",
+                    strengths: "Гармония, сотрудничество, дипломатические навыки.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Личного Года 3 символизирует творческий потенциал и оптимизм.",
+                    strengths: "Творческий потенциал, оптимизм, коммуникабельность.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Личного Года 4 символизирует стабильность и практичность.",
+                    strengths: "Стабильность, практичность, трудолюбие.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Личного Года 5 символизирует свободу, приключения и адаптивность.",
+                    strengths: "Свобода, приключения, адаптивность.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Личного Года 6 символизирует заботу, гармонию и семейные ценности.",
+                    strengths: "Забота, гармония, семейные ценности.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Личного Года 7 символизирует глубокие мысли, интуицию и духовность.",
+                    strengths: "Глубокие мысли, интуиция, духовность.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Личного Года 8 символизирует успех, материальное благополучие и организаторские способности.",
+                    strengths: "Успех, материальное благополучие, организаторские способности.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Личного Года 9 символизирует сострадание, гуманизм и духовную зрелость.",
+                    strengths: "Сострадание, гуманизм, духовную зрелость.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            personalMonthNumber: {
+                1: {
+                    description: "Число Личного Месяца 1 символизирует начало нового цикла и возможности для личного роста.",
+                    strengths: "Новые начинания, инициатива, независимость.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Личного Месяца 2 символизирует гармонию и сотрудничество.",
+                    strengths: "Гармония, сотрудничество, дипломатические навыки.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Личного Месяца 3 символизирует творческий потенциал и оптимизм.",
+                    strengths: "Творческий потенциал, оптимизм, коммуникабельность.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Личного Месяца 4 символизирует стабильность и практичность.",
+                    strengths: "Стабильность, практичность, трудолюбие.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Личного Месяца 5 символизирует свободу, приключения и адаптивность.",
+                    strengths: "Свобода, приключения, адаптивность.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Личного Месяца 6 символизирует заботу, гармонию и семейные ценности.",
+                    strengths: "Забота, гармония, семейные ценности.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Личного Месяца 7 символизирует глубокие мысли, интуицию и духовность.",
+                    strengths: "Глубокие мысли, интуиция, духовность.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Личного Месяца 8 символизирует успех, материальное благополучие и организаторские способности.",
+                    strengths: "Успех, материальное благополучие, организаторские способности.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Личного Месяца 9 символизирует сострадание, гуманизм и духовную зрелость.",
+                    strengths: "Сострадание, гуманизм, духовную зрелость.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+            personalDayNumber: {
+                1: {
+                    description: "Число Личного Дня 1 символизирует начало нового цикла и возможности для личного роста.",
+                    strengths: "Новые начинания, инициатива, независимость.",
+                    weaknesses: "Эгоизм, упрямство, нетерпимость.",
+                    learning: "Учиться сотрудничеству и принимать помощь от других.",
+                },
+                2: {
+                    description: "Число Личного Дня 2 символизирует гармонию и сотрудничество.",
+                    strengths: "Гармония, сотрудничество, дипломатические навыки.",
+                    weaknesses: "Нерешительность, зависимость от мнения других, чувствительность.",
+                    learning: "Учиться принимать решения и быть более уверенным в себе.",
+                },
+                3: {
+                    description: "Число Личного Дня 3 символизирует творческий потенциал и оптимизм.",
+                    strengths: "Творческий потенциал, оптимизм, коммуникабельность.",
+                    weaknesses: "Поверхностность, нетерпеливость, рассеянность.",
+                    learning: "Учиться концентрации и глубокому анализу.",
+                },
+                4: {
+                    description: "Число Личного Дня 4 символизирует стабильность и практичность.",
+                    strengths: "Стабильность, практичность, трудолюбие.",
+                    weaknesses: "Упрямство, ригидность, недоверчивость.",
+                    learning: "Учиться гибкости и принимать изменения.",
+                },
+                5: {
+                    description: "Число Личного Дня 5 символизирует свободу, приключения и адаптивность.",
+                    strengths: "Свобода, приключения, адаптивность.",
+                    weaknesses: "Непостоянство, импульсивность, нетерпимость к рутине.",
+                    learning: "Учиться планированию и ответственности.",
+                },
+                6: {
+                    description: "Число Личного Дня 6 символизирует заботу, гармонию и семейные ценности.",
+                    strengths: "Забота, гармония, семейные ценности.",
+                    weaknesses: "Сверхзаботливость, жертвенность, чрезмерная ответственность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+                7: {
+                    description: "Число Личного Дня 7 символизирует глубокие мысли, интуицию и духовность.",
+                    strengths: "Глубокие мысли, интуиция, духовность.",
+                    weaknesses: "Замкнутость, скептицизм, отстраненность.",
+                    learning: "Учиться открытости и общению с другими.",
+                },
+                8: {
+                    description: "Число Личного Дня 8 символизирует успех, материальное благополучие и организаторские способности.",
+                    strengths: "Успех, материальное благополучие, организаторские способности.",
+                    weaknesses: "Алчность, манипулятивность, эгоизм.",
+                    learning: "Учиться щедрости и альтруизму.",
+                },
+                9: {
+                    description: "Число Личного Дня 9 символизирует сострадание, гуманизм и духовную зрелость.",
+                    strengths: "Сострадание, гуманизм, духовную зрелость.",
+                    weaknesses: "Самопожертвование, нереалистичность, эмоциональная нестабильность.",
+                    learning: "Учиться балансу между заботой о других и заботой о себе.",
+                },
+            },
+        };
+    </script>
+</body>
+</html>
